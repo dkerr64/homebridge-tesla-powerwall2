@@ -55,6 +55,8 @@ export class PowerMeterAccessory {
       return 'solar';
     case 'powermeter-grid':
       return 'site';
+    case 'powermeter-battery':
+      return 'battery';
     default:
       return 'unknown';
     }
@@ -80,6 +82,9 @@ export class PowerMeterAccessory {
       case 'site':
         power = Math.abs(data.site?.instant_power || 0);
         break;
+      case 'battery':
+        power = Math.abs(data.battery?.instant_power || 0);
+        break;
       }
 
       // Report power directly in watts. HomeKit's ambient light level (lux)
@@ -87,9 +92,9 @@ export class PowerMeterAccessory {
       // power range of any residential Powerwall installation.
       this.currentPower = Math.max(0.0001, Math.min(100000, power));
 
-      this.platform.log.debug(`Get Characteristic ${this.meterType} Power ->`, 
+      this.platform.log.debug(`Get Characteristic ${this.meterType} Power ->`,
         `${power}W (${this.currentPower} lux)`);
-      
+
       return this.currentPower;
     } catch (error) {
       this.platform.log.error(`Error getting ${this.meterType} power:`, error);
