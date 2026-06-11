@@ -54,10 +54,12 @@ export class PowerwallAccessory {
 
     // Register handlers for the Lightbulb characteristics
     this.lightbulbService.getCharacteristic(this.platform.Characteristic.On)
-      .onGet(this.getLightbulbOn.bind(this));
+      .onGet(this.getLightbulbOn.bind(this))
+      .onSet(this.setLightbulbOn.bind(this));
 
     this.lightbulbService.getCharacteristic(this.platform.Characteristic.Brightness)
-      .onGet(this.getLightbulbBrightness.bind(this));
+      .onGet(this.getLightbulbBrightness.bind(this))
+      .onSet(this.setLightbulbBrightness.bind(this));
 
     // Start polling for updates
     this.startPolling();
@@ -99,7 +101,7 @@ export class PowerwallAccessory {
       } else {
         this.chargingState = this.platform.Characteristic.ChargingState.NOT_CHARGING;
       }
-      
+
       this.platform.log.debug('Get Characteristic ChargingState ->', this.chargingState);
       return this.chargingState;
     } catch (error) {
@@ -144,6 +146,18 @@ export class PowerwallAccessory {
     return true;
   }
 
+  async setLightbulbOn(value: CharacteristicValue): Promise<void> {
+    // We are ignoring the request and will immediately set the value back to what it was (so user interface is correct)
+    // Calling updateCharacteristic within set handler fails, new value is not accepted.  Workaround is to request
+    // the update after short delay (say 50ms).
+    if (value === false) {
+      this.platform.log.debug('Ignoring user request to turn Powerwall off.');
+      setTimeout(() => {
+        this.lightbulbService.updateCharacteristic(this.platform.Characteristic.On, true);
+      }, 50);
+    }
+  }
+
   /**
    * Handle requests to get the current value of the Lightbulb "Brightness" characteristic
    * Returns the battery percentage (0-100%)
@@ -161,6 +175,22 @@ export class PowerwallAccessory {
     } catch (error) {
       this.platform.log.error('Error getting battery level for brightness:', error);
       return this.batteryLevel;
+    }
+  }
+
+  /**
+   * Handle requests to set the value of the Lightbulb "Brightness" characteristic
+   */
+  async setLightbulbBrightness(value: CharacteristicValue): Promise<void> {
+    // We are ignoring the request and will immediately set the value back to what it was (so user interface is correct)
+    // Calling updateCharacteristic within set handler fails, new value is not accepted.  Workaround is to request
+    // the update after short delay (say 50ms).
+    if (value !== this.batteryLevel) {
+      this.platform.log.debug('Ignoring user request to change Powerwall "brightness".');
+      setTimeout(() => {
+        this.lightbulbService.updateCharacteristic(this.platform.Characteristic.Brightness, this.batteryLevel);
+        this.lightbulbService.updateCharacteristic(this.platform.Characteristic.On, true);
+      }, 50);
     }
   }
 
