@@ -1,9 +1,9 @@
-import type { 
-  API, 
+import type {
+  API,
   Characteristic,
   Logging,
-  PlatformAccessory, 
-  PlatformConfig, 
+  PlatformAccessory,
+  PlatformConfig,
   Service,
 } from 'homebridge';
 
@@ -173,13 +173,13 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
    */
   private async createGridPowerSensors(): Promise<void> {
     const { GridPowerSensorAccessory } = await import('./accessories/gridpowersensor.js');
-    
+
     // Create feeding to grid sensor
     const feedingUuid = this.api.hap.uuid.generate('powerwall-grid-feeding-sensor');
     const feedingDisplayName = 'Tesla Powerwall Exporting';
-    
+
     const existingFeedingAccessory = this.accessories.get(feedingUuid);
-    
+
     if (existingFeedingAccessory) {
       this.log.info('Restoring existing accessory from cache:', existingFeedingAccessory.displayName);
       new GridPowerSensorAccessory(this, existingFeedingAccessory);
@@ -190,15 +190,15 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
       new GridPowerSensorAccessory(this, accessory);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
-    
+
     this.discoveredCacheUUIDs.push(feedingUuid);
-    
+
     // Create pulling from grid sensor
     const pullingUuid = this.api.hap.uuid.generate('powerwall-grid-pulling-sensor');
     const pullingDisplayName = 'Tesla Powerwall Importing';
-    
+
     const existingPullingAccessory = this.accessories.get(pullingUuid);
-    
+
     if (existingPullingAccessory) {
       this.log.info('Restoring existing accessory from cache:', existingPullingAccessory.displayName);
       new GridPowerSensorAccessory(this, existingPullingAccessory);
@@ -209,7 +209,7 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
       new GridPowerSensorAccessory(this, accessory);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
-    
+
     this.discoveredCacheUUIDs.push(pullingUuid);
   }
 
@@ -222,6 +222,7 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
       { type: 'powermeter-solar', name: 'Tesla Powerwall Solar' },
       { type: 'powermeter-grid', name: 'Tesla Powerwall Grid' },
       { type: 'powermeter-load', name: 'Tesla Powerwall Load' },
+      { type: 'powermeter-battery', name: 'Tesla Powerwall Battery' },
     ];
 
     for (const meter of meterTypes) {
