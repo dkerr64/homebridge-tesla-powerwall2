@@ -4,7 +4,7 @@
 const assert = require('assert');
 const { MockAgent } = require('undici');
 
-const PLUGIN_NAME = 'homebridge-tesla-powerwall';
+const PLUGIN_NAME = 'homebridge-tesla-powerwall2';
 const PLATFORM_NAME = 'TeslaPowerwall';
 
 function createApiMock() {

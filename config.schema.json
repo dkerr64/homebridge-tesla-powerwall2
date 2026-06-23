@@ -3,7 +3,7 @@
   "pluginType": "platform",
   "singular": true,
   "headerDisplay": "A Homebridge plugin for Tesla Powerwall that provides battery status, power flow, and grid connectivity monitoring in HomeKit.",
-  "footerDisplay": "For help and support visit the [plugin repository](https://github.com/nmuldoon/homebridge-tesla-powerwall).",
+  "footerDisplay": "For help and support visit the [plugin repository](https://github.com/dkerr64/homebridge-tesla-powerwall2).",
   "schema": {
     "type": "object",
     "properties": {

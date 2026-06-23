@@ -1,33 +1,14 @@
-# homebridge-tesla-powerwall
-[![npm](https://img.shields.io/npm/v/homebridge-tesla-powerwall.svg)](https://www.npmjs.com/package/homebridge-tesla-powerwall)
-[![npm](https://img.shields.io/npm/dt/homebridge-tesla-powerwall.svg)](https://www.npmjs.com/package/homebridge-tesla-powerwall)
+# homebridge-tesla-powerwall2
+[![npm](https://badgen.net/npm/v/homebridge-tesla-powerwall2/latest?icon=npm&label)](https://www.npmjs.com/package/homebridge-tesla-powerwall2)
+[![npm](https://badgen.net/npm/dt/homebridge-tesla-powerwall2?label=downloads)](https://www.npmjs.com/package/homebridge-tesla-powerwall2)
 
-(Unofficial) Homebridge Plugin for the Tesla Powerwall - **Now Updated for Homebridge 2.0!**
+**Unofficial** Homebridge Plugin for the Tesla Powerwall - **Now Updated for Homebridge 2.0!**
 
 Communication with the Tesla Powerwall is according to https://github.com/vloschiavo/powerwall2 .
 
-This plugin has been completely modernized with TypeScript, updated dependencies, and Homebridge 2.0 compatibility while maintaining all original functionality.
+This plugin has been completely modernized with TypeScript, updated dependencies, and Homebridge 2.0 compatibility while maintaining all original functionality.  With thanks to @nmuldoon
 
-If you like this plugin, it is possible to donate a "cup of coffee" via Paypal:
-
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.me/HomebridgePowerwall)
-
-## ✨ What's New in v4.1.0
-
-- 🔌 **Grid Power Sensors**: New sensors that trigger when power is feeding to or pulling from the grid (perfect for automations!)
-- 🔄 **Updated Dependencies**: All dependencies updated to latest compatible versions
-- 🔒 **Security Fixes**: Resolved npm audit vulnerabilities
-- 🎯 **TypeScript Improvements**: Better type definitions for API responses
-- 📊 **Configurable Thresholds**: Set power thresholds to avoid false sensor triggers from noise
-
-### Previous Updates (v4.0.0)
-
-- 🔄 **Homebridge 2.0 Compatibility**: Fully updated for the latest Homebridge architecture
-- 🔧 **TypeScript Rewrite**: Complete conversion to TypeScript for better reliability and development experience
-- 📦 **Modern Dependencies**: Updated all dependencies, replaced deprecated packages
-- 🧪 **Enhanced Testing**: New connection test script with comprehensive debugging
-- 🔒 **Improved Authentication**: Better session management and cookie handling
-- 📱 **Config UI Schema**: Enhanced configuration interface for Homebridge UI
+See [CHANGELOG.md](https://github.com/dkerr64/homebridge-tesla-powerwall2/blob/master/CHANGELOG.md) for latest updates and history
 
 ## Requirements
 
@@ -43,7 +24,7 @@ If you like this plugin, it is possible to donate a "cup of coffee" via Paypal:
 
 ## Command Line Installation
 ```bash
-npm install -g homebridge-tesla-powerwall
+npm install -g homebridge-tesla-powerwall2
 ```
 
 ## Testing Your Connection
@@ -52,7 +33,7 @@ Before configuring the plugin, test your connection to ensure everything works:
 
 ```bash
 # Navigate to the plugin directory (if installed globally)
-cd $(npm root -g)/homebridge-tesla-powerwall
+cd $(npm root -g)/homebridge-tesla-powerwall2
 
 # Run the connection test
 node test/integration/test-connection.js <ip-address> <password>
@@ -343,8 +324,8 @@ npm install -g homebridge-tesla-powerwall@1.1.0
 
 ### Building from Source
 ```bash
-git clone https://github.com/nmuldoon/homebridge-tesla-powerwall.git
-cd homebridge-tesla-powerwall
+git clone https://github.com/dkerr64/homebridge-tesla-powerwall2.git
+cd homebridge-tesla-powerwall2
 npm install
 npm run build
 ```
@@ -381,7 +362,7 @@ Contributions are welcome! Please:
 
 ## Feature Requests / Bug Reports
 
-Please create an [Issue](https://github.com/nmuldoon/homebridge-tesla-powerwall/issues/new) with:
+Please create an [Issue](https://github.com/dkerr64/homebridge-tesla-powerwall2/issues/new) with:
 - Plugin version
 - Homebridge version
 - Node.js version

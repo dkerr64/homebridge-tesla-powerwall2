@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.4] - 2026-06-??
+
+Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 and maintainer changed to @dkerr64
+- To disquinguish from the legacy plugin that no longer works
+- To allow us to publish this new plugin on [npmjs](https://www.npmjs.com/) as maintainer of original plugin is not responding to outreach on whether he would accept a pull request and update the published plugin
+- And reflects that the plugin is only tested with Powerwall 2
+
 ## [4.2.3] - 2026-06-11
 
 ### Fixed
