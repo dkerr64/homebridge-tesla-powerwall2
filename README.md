@@ -62,7 +62,7 @@ node test/integration/validate-grid-sensors.js 192.168.1.50 your-password-here 5
 ```
 
 The validator will:
-- ✅ Show current power flow (grid, solar, battery, load)
+- ✅ Show current power flow (grid, solar, battery, home)
 - ✅ Display grid sensor states based on your threshold
 - ✅ Provide recommendations for automation setup
 - 💡 Help you tune the threshold for your system
@@ -122,7 +122,7 @@ The validator will:
 - `enableGridStatus`: Show grid connectivity status as a Contact Sensor (default: true)
 - `enableGridPowerSensors`: Show sensors for grid power flow detection (default: true) ⭐ **NEW**
 - `gridSensorThreshold`: Power threshold in watts for sensor activation (default: 50W, helps avoid false triggers) ⭐ **NEW**
-- `enablePowerMeters`: Show power flow meters (Solar, Grid, Load) as Light Sensors (default: true)
+- `enablePowerMeters`: Show power flow meters (Solar, Grid, Home, Battery) as Light Sensors (default: true)
 - `enableHistory`: Enable historical data logging for Eve app (default: false)
 
 #### Troubleshooting
@@ -146,7 +146,8 @@ The validator will:
    (the lux value equals watts). Three are provided:
    - `Tesla Powerwall Solar` - power your panels are generating
    - `Tesla Powerwall Grid` - power flowing to/from the utility grid
-   - `Tesla Powerwall Load` - total power your home is consuming
+   - `Tesla Powerwall Home` - total power your home is consuming
+   - `Tesla Powerwall Battery` - power flowing to/from the Powerwall battery
 
    > HomeKit has no native power-sensor type, so watts are carried on a light
    > sensor's lux value (range 0–100000, which covers any residential system).
@@ -233,7 +234,7 @@ If you need to automate operation mode changes, you have these options:
 3. Use a separate automation system that supports the Tesla Fleet API
 
 This plugin focuses on what's possible with the local API:
-- Real-time monitoring of battery, grid, solar, and load
+- Real-time monitoring of battery, grid, solar, and home
 - Grid power flow detection (feeding/pulling sensors)
 - Grid connectivity status
 - Triggering HomeKit automations based on power flow

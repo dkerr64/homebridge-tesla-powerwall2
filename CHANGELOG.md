@@ -12,6 +12,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 ### Changed
 
 - Name of grid sensor changed from _Online_ to _Offline_ for consistency with other sensors that trigger when the state changes to the named state
+- Name of home/load sensor changed from _Load_ to _Home_ for consistency with Tesla's own app
 
 ## [4.2.3] - 2026-06-11
 
