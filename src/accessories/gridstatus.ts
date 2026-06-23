@@ -21,7 +21,7 @@ export class GridStatusAccessory {
     this.informationService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
     this.informationService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Tesla')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Powerwall Grid Online')
+      .setCharacteristic(this.platform.Characteristic.Model, 'Powerwall Grid Offline')
       .setCharacteristic(this.platform.Characteristic.SerialNumber, 'TeslaPowerwall-Grid-' + accessory.UUID);
 
     // Get the ContactSensor service if it exists, otherwise create a new one

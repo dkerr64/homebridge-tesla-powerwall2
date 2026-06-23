@@ -150,7 +150,7 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
   private async createGridStatusAccessory(): Promise<void> {
     const { GridStatusAccessory } = await import('./accessories/gridstatus.js');
     const uuid = this.api.hap.uuid.generate('powerwall-grid-status');
-    const displayName = 'Tesla Powerwall Grid Online';
+    const displayName = 'Tesla Powerwall Grid Offline';
 
     const existingAccessory = this.accessories.get(uuid);
 

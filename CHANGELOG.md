@@ -9,6 +9,10 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 - To allow us to publish this new plugin on [npmjs](https://www.npmjs.com/) as maintainer of original plugin is not responding to outreach on whether he would accept a pull request and update the published plugin
 - And reflects that the plugin is only tested with Powerwall 2
 
+### Changed
+
+- Name of grid sensor changed from _Online_ to _Offline_ for consistency with other sensors that trigger when the state changes to the named state
+
 ## [4.2.3] - 2026-06-11
 
 ### Fixed

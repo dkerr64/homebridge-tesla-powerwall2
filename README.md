@@ -133,7 +133,7 @@ The validator will:
 ### Accessories Provided
 
 1. **Battery Status** - Shows battery charge level, charging state, and low battery alerts
-2. **Grid Online Sensor** (`Tesla Powerwall Grid Online`) - Contact sensor reflecting whether the Powerwall is grid-tied
+2. **Grid Offline Sensor** (`Tesla Powerwall Grid Offline`) - Contact sensor reflecting whether the Powerwall is grid-tied
    - **Closed** = grid connected (`grid_status: SystemGridConnected`)
    - **Open** = grid disconnected / islanded (`SystemIslandedActive` or similar)
 3. **Exporting Sensor** (`Tesla Powerwall Exporting`) - Contact sensor that opens when you are exporting to the grid
@@ -157,7 +157,7 @@ The validator will:
 > convention is **Closed = quiescent / resting state, Open = the noteworthy
 > event** (which is what you usually build automations on). For these
 > sensors:
-> - `Grid Online` is **Closed** while everything is normal (grid connected)
+> - `Grid Offline` is **Closed** while everything is normal (grid connected)
 >   and **Opens** when the Powerwall islands.
 > - `Exporting` and `Importing` are **Closed** while idle and **Open** while
 >   that flow direction is actively above the threshold.
