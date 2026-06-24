@@ -2,9 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
-## [4.2.4] - 2026-06-??
+## [4.2.5] - 2026-06-24
+
+- Update package.json and subsequent required changes in source for "module" type
+- Updates to README.md and CHANGELOG.md for markdown lint
+- Updated [LICENSE](https://github.com/dkerr64/homebridge-tesla-powerwall2/blob/master/LICENSE) to Apache 2.0 for consistency with homebridge plugins
+
+## [4.2.4] - 2026-06-23
 
 Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 and maintainer changed to @dkerr64
+
 - To disquinguish from the legacy plugin that no longer works
 - To allow us to publish this new plugin on [npmjs](https://www.npmjs.com/) as maintainer of original plugin is not responding to outreach on whether he would accept a pull request and update the published plugin
 - And reflects that the plugin is only tested with Powerwall 2
@@ -17,6 +24,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 ## [4.2.3] - 2026-06-11
 
 ### Fixed
+
 - Power meters (solar/grid/load) now report the **actual watts** instead of
   one-tenth of the reading. The previous `power / 10` scaling was removed;
   HomeKit's ambient-light (lux) characteristic accepts up to 100000, which
@@ -26,6 +34,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
   Apple Home apps and the HomeKit integer 0–100 spec. (#19)
 
 ### Changed
+
 - `tsconfig.json` now uses `"module"`/`"moduleResolution": "nodenext"`
   (the previous `"node"` value is deprecated), matching the current
   homebridge-plugin-template. Relative dynamic imports were given explicit
@@ -37,6 +46,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
   `MODULE_TYPELESS_PACKAGE_JSON` warning. (#16)
 
 ### Documentation
+
 - Expanded the README's power-meter description to spell out what each
   meter shows (Solar = generation, Grid = utility flow, Load = household
   consumption) and to note that the lux value equals actual watts.
@@ -44,6 +54,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 ## [4.2.2] - 2026-06-10
 
 ### Changed (breaking for existing automations)
+
 - Inverted the contact-sensor polarity for the `Exporting` and `Importing`
   sensors so it now matches HomeKit's door-sensor convention: **Closed
   while idle, Open while active**. Previously the sensors reported
@@ -67,6 +78,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
   the new names (underlying property names unchanged).
 
 ### Documentation
+
 - README "Accessories Provided" section rewritten with the new names and
   explicit Open/Closed state mapping for each contact sensor, plus a note
   on HomeKit's door-sensor terminology (Open = event, Closed = idle).
@@ -76,18 +88,21 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 ## [4.2.1] - 2026-06-10
 
 ### Fixed
+
 - Inverted Powerwall charging state (#10). The Tesla aggregates API reports
   `battery.instant_power` as positive when discharging and negative when
   charging; the comparison in `getChargingState` had the polarity reversed,
   so HomeKit saw `CHARGING` during discharge and vice versa.
 
 ### Tests
+
 - Added unit coverage for `PowerwallAccessory.getChargingState` around the
   charging/discharging/noise-band cases.
 
 ## [4.2.0] - 2026-06-09
 
 ### Changed
+
 - Replaced `node-fetch` with `undici` and Node's native fetch
 - Bumped Homebridge dev dependency to 2.x (matches `engines` field)
 - Updated `@types/node`, `typescript-eslint`, `mocha`, `nock`, `tough-cookie` to latest
@@ -96,6 +111,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 - `HttpClient` interface now strongly typed in `TeslaPowerwallPlatformInterface` (was `any`)
 
 ### Removed
+
 - Unused runtime deps: `moment`, `fakegato-history`, `node-fetch`, `@types/node-fetch`
 - Unused dev deps: `chalk`, `tough-cookie`, `events`
 - Orphaned `src/configUI.ts` (never wired up)
@@ -106,12 +122,14 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 - `enableHistory` config option (no implementation existed)
 
 ### Security
+
 - Reduced `npm audit` findings from 12 → 0 by adding `overrides` for the
   remaining mocha transitives (`diff` → `^9.0.0`, `serialize-javascript` →
   `^7.0.5`). Mocha's runtime usage (`diffWordsWithSpace`, `createPatch`) is
   stable across these majors; the test suite passes unchanged.
 
 ### Tests
+
 - Replaced the legacy mocha suite (which targeted the pre-TypeScript static-platform shape with `0_powerwall`/`1_solar`/`PowerMeterService` etc.) with focused tests for the current `DynamicPlatformPlugin`: plugin registration, platform construction error paths, and HttpClient auth/401-retry/cache behaviour exercised through `undici.MockAgent`
 - `HttpClient` now accepts an optional `dispatcher` and `autoStartLogin` flag so its HTTP layer is unit-testable
 - Migrated `test/integration/*.js` scripts off `node-fetch`/`tough-cookie` onto `undici`
@@ -119,6 +137,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
 ## [4.1.0] - 2026-01-16
 
 ### Added
+
 - **Grid Power Sensors** (addresses Issue #35)
   - New "Grid Feeding" sensor triggers when exporting power to grid
   - New "Grid Pulling" sensor triggers when importing power from grid
@@ -138,6 +157,7 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
   - Configuration examples
 
 ### Changed
+
 - Updated all dependencies to latest compatible versions
   - @eslint/js: 9.8.0 → 9.39.2
   - @types/node: 20.5.0 → 20.19.30
@@ -147,22 +167,26 @@ Plugin renamed from homebridge-tesla-powerwall to homebridge-tesla-powerwall2 an
   - And more...
 
 ### Fixed
+
 - Memory leaks in all accessories (added proper cleanup methods)
 - Type safety improvements across the codebase
 - Nullish coalescing for numeric config values (allows 0 as valid threshold)
 - Parameter validation in validation script
 
 ### Security
+
 - Fixed 4 npm audit vulnerabilities (6→2 remaining low-severity dev dependencies)
 - CodeQL security scan: 0 alerts
 
 ### Documented
+
 - **Operation Mode Control Limitations** (Issue #54)
   - Local API does not support changing operation modes
   - Requires Tesla Fleet API (cloud-based)
   - Provided alternatives and future roadmap
 
 ## [4.0.1] - Previous Version
+
 - TypeScript rewrite
 - Homebridge 2.0 compatibility
 - Modern dependency updates

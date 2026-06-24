@@ -1,12 +1,13 @@
 # homebridge-tesla-powerwall2
+
 [![npm](https://badgen.net/npm/v/homebridge-tesla-powerwall2/latest?icon=npm&label)](https://www.npmjs.com/package/homebridge-tesla-powerwall2)
 [![npm](https://badgen.net/npm/dt/homebridge-tesla-powerwall2?label=downloads)](https://www.npmjs.com/package/homebridge-tesla-powerwall2)
 
-**Unofficial** Homebridge Plugin for the Tesla Powerwall - **Now Updated for Homebridge 2.0!**
+**Unofficial** Homebridge Plugin for the Tesla Powerwall 2
 
 Communication with the Tesla Powerwall is according to https://github.com/vloschiavo/powerwall2 .
 
-This plugin has been completely modernized with TypeScript, updated dependencies, and Homebridge 2.0 compatibility while maintaining all original functionality.  With thanks to @nmuldoon
+This plugin has been completely modernized with TypeScript, updated dependencies, and Homebridge 2.0 compatibility while maintaining all original functionality.  With thanks to [@nmuldoon](https://github.com/nmuldoon/)
 
 See [CHANGELOG.md](https://github.com/dkerr64/homebridge-tesla-powerwall2/blob/master/CHANGELOG.md) for latest updates and history
 
@@ -15,14 +16,16 @@ See [CHANGELOG.md](https://github.com/dkerr64/homebridge-tesla-powerwall2/blob/m
 - **Node.js**: 18.15.0 or higher
 - **Homebridge**: 1.6.0 or higher
 
-# Installation
+## Installation
 
-## Recommended: Homebridge UI
+### Recommended: Homebridge UI
+
 1. Install [Homebridge](https://github.com/homebridge/homebridge): see the [Homebridge wiki](https://github.com/homebridge/homebridge/wiki)
 2. In the Homebridge Web-GUI, search for the "Tesla Powerwall" plugin and install it.
 3. Configure the plugin using the config UI interface.
 
-## Command Line Installation
+### Command Line Installation
+
 ```bash
 npm install -g homebridge-tesla-powerwall2
 ```
@@ -43,6 +46,7 @@ node test/integration/test-connection.js 192.168.1.50 your-password-here
 ```
 
 The test script will:
+
 - ✅ Verify authentication
 - ✅ Test battery status retrieval
 - ✅ Test power flow data
@@ -62,6 +66,7 @@ node test/integration/validate-grid-sensors.js 192.168.1.50 your-password-here 5
 ```
 
 The validator will:
+
 - ✅ Show current power flow (grid, solar, battery, home)
 - ✅ Display grid sensor states based on your threshold
 - ✅ Provide recommendations for automation setup
@@ -70,6 +75,7 @@ The validator will:
 ## Configuration
 
 ### Basic Configuration
+
 ```json
 {
     "platforms": [
@@ -87,12 +93,14 @@ The validator will:
 ```
 
 ### Required Parameters
+
 - `platform`: Must be "TeslaPowerwall"
 - `name`: Display name for your Powerwall
 - `ip`: IP address of your Tesla Powerwall
 - `password`: Your Powerwall password
 
 ### Optional Parameters
+
 ```json
 {
     "platform": "TeslaPowerwall",
@@ -113,11 +121,13 @@ The validator will:
 ### Configuration Options Explained
 
 #### Connection Settings
+
 - `ip`: **Required** - The IP address of your Tesla Powerwall on your local network
 - `password`: **Required** - Your Tesla Powerwall password (set via the Tesla app)
 - `port`: Port number (default: "443")
 
 #### Monitoring Settings
+
 - `pollingInterval`: How often to poll the Powerwall for updates in seconds (default: 15, min: 5, max: 300)
 - `enableGridStatus`: Show grid connectivity status as a Contact Sensor (default: true)
 - `enableGridPowerSensors`: Show sensors for grid power flow detection (default: true) ⭐ **NEW**
@@ -126,6 +136,7 @@ The validator will:
 - `enableHistory`: Enable historical data logging for Eve app (default: false)
 
 #### Troubleshooting
+
 - `debug`: Enable detailed debug logging (default: false)
 
 ## Features
@@ -158,6 +169,7 @@ The validator will:
 > convention is **Closed = quiescent / resting state, Open = the noteworthy
 > event** (which is what you usually build automations on). For these
 > sensors:
+>
 > - `Grid Offline` is **Closed** while everything is normal (grid connected)
 >   and **Opens** when the Powerwall islands.
 > - `Exporting` and `Importing` are **Closed** while idle and **Open** while
@@ -172,12 +184,14 @@ The validator will:
 The grid power sensors enable powerful HomeKit automations:
 
 #### Example 1: Get notified when exporting power to the grid
+
 ```
 When: Tesla Powerwall Exporting opens
 Then: Send notification "You're selling power to the grid! 💰"
 ```
 
 #### Example 2: Notify when importing expensive peak power
+
 ```
 When: Tesla Powerwall Importing opens
 AND Time is between 4:00 PM and 9:00 PM
@@ -185,6 +199,7 @@ Then: Send notification "Using peak power from grid ⚡"
 ```
 
 #### Example 3: Turn off non-essential loads when pulling from grid
+
 ```
 When: Tesla Powerwall Importing opens
 Then: 
@@ -194,6 +209,7 @@ Then:
 ```
 
 #### Example 4: Start charging devices when exporting to grid
+
 ```
 When: Tesla Powerwall Exporting opens
 AND Battery level > 80%
@@ -206,6 +222,7 @@ Then:
 ### Sensor Threshold Configuration
 
 The `gridSensorThreshold` setting (default 50W) prevents false triggers from minor power fluctuations:
+
 - **50W (default)**: Good balance for most installations
 - **100W+**: Recommended for systems with frequent small fluctuations
 - **0W**: Maximum sensitivity, may cause false triggers
@@ -213,6 +230,7 @@ The `gridSensorThreshold` setting (default 50W) prevents false triggers from min
 ## Legacy Configuration (from v3.x)
 
 For users upgrading from version 3.x, the plugin has been simplified. The old `additionalServices` configuration is no longer needed. Simply use the new boolean flags:
+
 - `enableGridStatus` - replaces gridstatus options
 - `enableGridPowerSensors` - NEW feature for grid power flow detection
 - `enablePowerMeters` - replaces individual meter options
@@ -225,15 +243,18 @@ For users upgrading from version 3.x, the plugin has been simplified. The old `a
 **Important Note**: Due to recent Tesla Powerwall firmware updates, **operation mode control (switching between Self-Powered, Time-based, or changing Backup Reserve) is NOT available via the local API**. 
 
 According to Tesla's architecture:
+
 - The **local API** (used by this plugin) provides read-only access to system status and power flow data
 - **Operation mode changes** require the Tesla Fleet API, which needs cloud authentication
 
 If you need to automate operation mode changes, you have these options:
+
 1. Use the Tesla mobile app manually
 2. Integrate with Tesla's Fleet API (requires developer account and cloud access)
 3. Use a separate automation system that supports the Tesla Fleet API
 
 This plugin focuses on what's possible with the local API:
+
 - Real-time monitoring of battery, grid, solar, and home
 - Grid power flow detection (feeding/pulling sensors)
 - Grid connectivity status
@@ -244,6 +265,7 @@ We may add Tesla Fleet API support in a future version if there's sufficient dem
 ## Example Configurations
 
 ### Minimal Configuration
+
 ```json
 {
     "platform": "TeslaPowerwall",
@@ -255,6 +277,7 @@ We may add Tesla Fleet API support in a future version if there's sufficient dem
 ```
 
 ### Full Configuration with All Features
+
 ```json
 {
     "platform": "TeslaPowerwall",
@@ -272,6 +295,7 @@ We may add Tesla Fleet API support in a future version if there's sufficient dem
 ```
 
 ### Configuration with Disabled Sensors
+
 ```json
 {
     "platform": "TeslaPowerwall",
@@ -297,6 +321,7 @@ node test/integration/test-connection.js <ip> <username> <password>
 ### ❌ Login Errors
 
 If you get login errors (403, authentication failed):
+
 1. Verify your password is correct
 2. Check if your Powerwall requires re-registration
 3. Try the connection test script for detailed debugging
@@ -309,6 +334,7 @@ If you get login errors (403, authentication failed):
 ### ⚡ Grid Power Sensors Not Triggering
 
 If the new grid power sensors aren't working as expected:
+
 1. Check the `gridSensorThreshold` setting - you may need to adjust it
 2. Use debug logging to see actual power values: `"debug": true`
 3. Verify your Powerwall is actually feeding/pulling power above the threshold
@@ -317,6 +343,7 @@ If the new grid power sensors aren't working as expected:
 ### 📊 For Older Powerwall Versions (< 20.49.0)
 
 If your Powerwall firmware is older than 20.49.0, you may need to use the legacy version:
+
 ```bash
 npm install -g homebridge-tesla-powerwall@1.1.0
 ```
@@ -324,6 +351,7 @@ npm install -g homebridge-tesla-powerwall@1.1.0
 ## Development
 
 ### Building from Source
+
 ```bash
 git clone https://github.com/dkerr64/homebridge-tesla-powerwall2.git
 cd homebridge-tesla-powerwall2
@@ -332,6 +360,7 @@ npm run build
 ```
 
 ### Running Tests
+
 ```bash
 npm test
 npm run lint
@@ -348,6 +377,7 @@ The v4.x updates include major improvements:
 5. **Testing**: Use the new test script to verify connectivity
 
 ### Breaking Changes from v3.x
+
 - Configuration format has been simplified (old format still works but is deprecated)
 - Some advanced Eve features may not be available in v4.x
 
@@ -356,6 +386,7 @@ Simply update the plugin and restart Homebridge. Your existing configuration sho
 ## Contributing
 
 Contributions are welcome! Please:
+
 1. Fork the repository
 2. Create a feature branch
 3. Add tests if applicable
@@ -364,6 +395,7 @@ Contributions are welcome! Please:
 ## Feature Requests / Bug Reports
 
 Please create an [Issue](https://github.com/dkerr64/homebridge-tesla-powerwall2/issues/new) with:
+
 - Plugin version
 - Homebridge version
 - Node.js version
@@ -373,7 +405,7 @@ Please create an [Issue](https://github.com/dkerr64/homebridge-tesla-powerwall2/
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the Apache 2.0 - see the [LICENSE](https://github.com/dkerr64/homebridge-tesla-powerwall2/blob/master/LICENSE) file for details.
 
 ---
 
