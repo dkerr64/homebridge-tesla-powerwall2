@@ -1,6 +1,6 @@
 import type { Logging } from 'homebridge';
 import { Agent, type Dispatcher, fetch, type Response } from 'undici';
-import type { MetersAggregatesResponse, SystemStatusResponse, GridStatusResponse } from '../types';
+import type { MetersAggregatesResponse, SystemStatusResponse, GridStatusResponse } from '../types.js';
 
 interface CacheEntry {
   data: unknown;

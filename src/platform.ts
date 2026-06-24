@@ -7,9 +7,9 @@ import type {
   Service,
 } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { HttpClient } from './lib/http-client';
-import type { TeslaPowerwallPlatformInterface } from './types';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
+import { HttpClient } from './lib/http-client.js';
+import type { TeslaPowerwallPlatformInterface } from './types.js';
 
 /**
  * Tesla Powerwall Platform

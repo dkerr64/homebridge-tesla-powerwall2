@@ -7,7 +7,7 @@ import type {
   PlatformConfig,
   Service,
 } from 'homebridge';
-import type { HttpClient } from './lib/http-client';
+import type { HttpClient } from './lib/http-client.js';
 
 export interface TeslaPowerwallPlatformInterface extends DynamicPlatformPlugin {
   readonly Service: typeof Service;
