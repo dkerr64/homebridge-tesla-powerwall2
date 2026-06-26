@@ -40,7 +40,8 @@
     "homebridge": "^1.8.0 || ^2.0.0"
   },
   "dependencies": {
-    "undici": "^8.4.1"
+    "undici": "^8.4.1",
+    "semaphore-promise": "^1.4.4"
   },
   "overrides": {
     "diff": "^9.0.0",

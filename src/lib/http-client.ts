@@ -1,6 +1,7 @@
 import type { Logging } from 'homebridge';
 import { Agent, type Dispatcher, fetch, type Response } from 'undici';
 import type { MetersAggregatesResponse, SystemStatusResponse, GridStatusResponse } from '../types.js';
+import { Semaphore } from 'semaphore-promise';
 
 interface CacheEntry {
   data: unknown;
@@ -26,6 +27,7 @@ export class HttpClient {
   private lastAuthAttempt: number = 0;
   private authInProgress: Promise<void> | null = null;
   private loginIntervalId: NodeJS.Timeout | null = null;
+  private httpGetSemaphore = new Semaphore();
 
   constructor(
     private readonly ip: string,
@@ -200,7 +202,21 @@ export class HttpClient {
   }
 
   async get(endpoint: string, cacheInterval?: number): Promise<unknown> {
-    return this.makeRequest('GET', endpoint, undefined, cacheInterval);
+    if (cacheInterval) {
+      // If we are using a cache, we need to acquire a semaphore to ensure that only
+      // one request is made at a time... allowing cache to be properly initialized.
+      const releaseSemaphore = await this.httpGetSemaphore.acquire();
+      try {
+        return await this.makeRequest('GET', endpoint, undefined, cacheInterval);
+      } catch (error) {
+        this.log.error(`Error fetching ${endpoint}:`, error);
+        throw error;
+      } finally {
+        releaseSemaphore();
+      }
+    } else {
+      return this.makeRequest('GET', endpoint, undefined, cacheInterval);
+    }
   }
 
   async post(endpoint: string, body: unknown): Promise<unknown> {
