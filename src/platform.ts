@@ -174,43 +174,43 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
   private async createGridPowerSensors(): Promise<void> {
     const { GridPowerSensorAccessory } = await import('./accessories/gridpowersensor.js');
 
-    // Create feeding to grid sensor
-    const feedingUuid = this.api.hap.uuid.generate('powerwall-grid-feeding-sensor');
-    const feedingDisplayName = 'Tesla Powerwall Exporting';
+    // Create exporting to grid sensor
+    const exportingUuid = this.api.hap.uuid.generate('powerwall-grid-exporting-sensor');
+    const exportingDisplayName = 'Tesla Powerwall Exporting';
 
-    const existingFeedingAccessory = this.accessories.get(feedingUuid);
+    const existingExportingAccessory = this.accessories.get(exportingUuid);
 
-    if (existingFeedingAccessory) {
-      this.log.info('Restoring existing accessory from cache:', existingFeedingAccessory.displayName);
-      new GridPowerSensorAccessory(this, existingFeedingAccessory);
+    if (existingExportingAccessory) {
+      this.log.info('Restoring existing accessory from cache:', existingExportingAccessory.displayName);
+      new GridPowerSensorAccessory(this, existingExportingAccessory);
     } else {
-      this.log.info('Adding new accessory:', feedingDisplayName);
-      const accessory = new this.api.platformAccessory(feedingDisplayName, feedingUuid);
-      accessory.context.device = { type: 'gridpowersensor', sensorType: 'feeding' };
+      this.log.info('Adding new accessory:', exportingDisplayName);
+      const accessory = new this.api.platformAccessory(exportingDisplayName, exportingUuid);
+      accessory.context.device = { type: 'gridpowersensor', sensorType: 'exporting' };
       new GridPowerSensorAccessory(this, accessory);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
 
-    this.discoveredCacheUUIDs.push(feedingUuid);
+    this.discoveredCacheUUIDs.push(exportingUuid);
 
-    // Create pulling from grid sensor
-    const pullingUuid = this.api.hap.uuid.generate('powerwall-grid-pulling-sensor');
-    const pullingDisplayName = 'Tesla Powerwall Importing';
+    // Create importing from grid sensor
+    const importingUuid = this.api.hap.uuid.generate('powerwall-grid-importing-sensor');
+    const importingDisplayName = 'Tesla Powerwall Importing';
 
-    const existingPullingAccessory = this.accessories.get(pullingUuid);
+    const existingImportingAccessory = this.accessories.get(importingUuid);
 
-    if (existingPullingAccessory) {
-      this.log.info('Restoring existing accessory from cache:', existingPullingAccessory.displayName);
-      new GridPowerSensorAccessory(this, existingPullingAccessory);
+    if (existingImportingAccessory) {
+      this.log.info('Restoring existing accessory from cache:', existingImportingAccessory.displayName);
+      new GridPowerSensorAccessory(this, existingImportingAccessory);
     } else {
-      this.log.info('Adding new accessory:', pullingDisplayName);
-      const accessory = new this.api.platformAccessory(pullingDisplayName, pullingUuid);
-      accessory.context.device = { type: 'gridpowersensor', sensorType: 'pulling' };
+      this.log.info('Adding new accessory:', importingDisplayName);
+      const accessory = new this.api.platformAccessory(importingDisplayName, importingUuid);
+      accessory.context.device = { type: 'gridpowersensor', sensorType: 'importing' };
       new GridPowerSensorAccessory(this, accessory);
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
 
-    this.discoveredCacheUUIDs.push(pullingUuid);
+    this.discoveredCacheUUIDs.push(importingUuid);
   }
 
   /**

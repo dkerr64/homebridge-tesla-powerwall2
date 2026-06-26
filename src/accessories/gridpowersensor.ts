@@ -4,12 +4,12 @@ import type { TeslaPowerwallPlatform } from '../platform.js';
 /**
  * Platform Accessory for Tesla Powerwall Grid Power Flow Sensors
  * 
- * Triggers notifications when the system is feeding to or pulling power from the grid.
+ * Triggers notifications when the system is exporting to or importing power from the grid.
  * Uses the /api/meters/aggregates endpoint to monitor real-time power flow.
  * 
  * This accessory creates two sensor types:
- * 1. Feeding to Grid - triggers when power flows to the grid (negative site power)
- * 2. Pulling from Grid - triggers when power flows from the grid (positive site power)
+ * 1. Exporting to Grid - triggers when power flows to the grid (negative site power)
+ * 2. Importing from Grid - triggers when power flows from the grid (positive site power)
  * 
  * Both sensors use configurable thresholds to avoid false triggers from minor fluctuations.
  * 
@@ -21,7 +21,7 @@ export class GridPowerSensorAccessory {
   
   // Current sensor state (0 = normal, 1 = detected)
   private sensorState = 0;
-  private sensorType: 'feeding' | 'pulling';
+  private sensorType: 'exporting' | 'importing';
   private pollingIntervalId?: NodeJS.Timeout;
   
   /**
@@ -38,16 +38,16 @@ export class GridPowerSensorAccessory {
     this.sensorType = accessory.context.device.sensorType;
     
     // Validate sensor type
-    if (!this.sensorType || (this.sensorType !== 'feeding' && this.sensorType !== 'pulling')) {
-      this.platform.log.error(`Invalid or missing sensor type for ${accessory.displayName}. Expected 'feeding' or 'pulling', got: ${this.sensorType}`);
-      this.sensorType = 'feeding'; // Fallback to prevent crash
+    if (!this.sensorType || (this.sensorType !== 'exporting' && this.sensorType !== 'importing')) {
+      this.platform.log.error(`Invalid or missing sensor type for ${accessory.displayName}. Expected 'exporting' or 'importing', got: ${this.sensorType}`);
+      this.sensorType = 'exporting'; // Fallback to prevent crash
     }
     
     // Set accessory information
     this.informationService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
     this.informationService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Tesla')
-      .setCharacteristic(this.platform.Characteristic.Model, `Powerwall ${this.sensorType === 'feeding' ? 'Exporting' : 'Importing'} Sensor`)
+      .setCharacteristic(this.platform.Characteristic.Model, `Powerwall ${this.sensorType === 'exporting' ? 'Exporting' : 'Importing'} Sensor`)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, `TeslaPowerwall-Grid-${this.sensorType}-` + accessory.UUID);
 
     // Get or create the ContactSensor service
@@ -90,11 +90,11 @@ export class GridPowerSensorAccessory {
       
       let isConditionMet = false;
       
-      if (this.sensorType === 'feeding') {
-        // Feeding to grid: site power is negative and magnitude exceeds threshold
+      if (this.sensorType === 'exporting') {
+        // Exporting to grid: site power is negative and magnitude exceeds threshold
         isConditionMet = sitePower < -threshold;
       } else {
-        // Pulling from grid: site power is positive and exceeds threshold
+        // Importing from grid: site power is positive and exceeds threshold
         isConditionMet = sitePower > threshold;
       }
       
@@ -107,7 +107,7 @@ export class GridPowerSensorAccessory {
         this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
 
       this.platform.log.debug(
-        `Get Characteristic ${this.sensorType === 'feeding' ? 'Exporting' : 'Importing'} Sensor ->`,
+        `Get Characteristic ${this.sensorType === 'exporting' ? 'Exporting' : 'Importing'} Sensor ->`,
         `${sitePower.toFixed(1)}W`,
         isConditionMet ? 'ACTIVE (Open)' : 'IDLE (Closed)',
         `(threshold: ${threshold}W)`,

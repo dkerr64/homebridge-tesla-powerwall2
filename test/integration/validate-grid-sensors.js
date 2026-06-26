@@ -114,38 +114,38 @@ async function validateGridSensors() {
     console.log('🎯 Grid Power Sensor States:');
     console.log('');
 
-    // Feeding sensor (exporting to grid)
-    const isFeedingToGrid = sitePower < -config.threshold;
-    console.log(`   📡 FEEDING TO GRID Sensor:`);
+    // Exporting sensor (exporting to grid)
+    const isExportingToGrid = sitePower < -config.threshold;
+    console.log(`   📡 EXPORTING TO GRID Sensor:`);
     console.log(`      Current: ${sitePower.toFixed(1)}W`);
     console.log(`      Threshold: < -${config.threshold}W`);
-    console.log(`      State: ${isFeedingToGrid ? '✅ DETECTED (Contact Open)' : '⚪ NOT DETECTED (Contact Closed)'}`);
-    if (isFeedingToGrid) {
+    console.log(`      State: ${isExportingToGrid ? '✅ DETECTED (Contact Open)' : '⚪ NOT DETECTED (Contact Closed)'}`);
+    if (isExportingToGrid) {
       console.log(`      💡 You are exporting ${Math.abs(sitePower).toFixed(1)}W to the grid!`);
     }
     console.log('');
 
-    // Pulling sensor (importing from grid)
-    const isPullingFromGrid = sitePower > config.threshold;
-    console.log(`   📡 PULLING FROM GRID Sensor:`);
+    // Importing sensor (importing from grid)
+    const isImportingFromGrid = sitePower > config.threshold;
+    console.log(`   📡 IMPORTING FROM GRID Sensor:`);
     console.log(`      Current: ${sitePower.toFixed(1)}W`);
     console.log(`      Threshold: > ${config.threshold}W`);
-    console.log(`      State: ${isPullingFromGrid ? '✅ DETECTED (Contact Open)' : '⚪ NOT DETECTED (Contact Closed)'}`);
-    if (isPullingFromGrid) {
+    console.log(`      State: ${isImportingFromGrid ? '✅ DETECTED (Contact Open)' : '⚪ NOT DETECTED (Contact Closed)'}`);
+    if (isImportingFromGrid) {
       console.log(`      💡 You are importing ${sitePower.toFixed(1)}W from the grid!`);
     }
     console.log('');
 
     // Step 5: Recommendations
     console.log('📋 Summary:');
-    if (!isFeedingToGrid && !isPullingFromGrid) {
+    if (!isExportingToGrid && !isImportingFromGrid) {
       console.log('   ℹ️  Grid power is below threshold - sensors will not trigger');
       console.log('   ℹ️  This is normal when battery is meeting all loads');
-    } else if (isFeedingToGrid) {
-      console.log('   ✅ Grid feeding sensor would trigger automations');
+    } else if (isExportingToGrid) {
+      console.log('   ✅ Grid exporting sensor would trigger automations');
       console.log('   💡 Use this to know when you have excess power to use');
-    } else if (isPullingFromGrid) {
-      console.log('   ✅ Grid pulling sensor would trigger automations');
+    } else if (isImportingFromGrid) {
+      console.log('   ✅ Grid importing sensor would trigger automations');
       console.log('   💡 Use this to reduce consumption during peak times');
     }
     console.log('');
