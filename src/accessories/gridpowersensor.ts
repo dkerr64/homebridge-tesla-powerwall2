@@ -48,7 +48,7 @@ export class GridPowerSensorAccessory {
     this.informationService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Tesla')
       .setCharacteristic(this.platform.Characteristic.Model, `Powerwall ${this.sensorType === 'exporting' ? 'Exporting' : 'Importing'} Sensor`)
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, `TeslaPowerwall-Grid-${this.sensorType}-` + accessory.UUID);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.UUID);
 
     // Get or create the ContactSensor service
     // We use ContactSensor because it can trigger automations in HomeKit

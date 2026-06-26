@@ -26,7 +26,7 @@ export class PowerMeterAccessory {
     this.informationService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Tesla')
       .setCharacteristic(this.platform.Characteristic.Model, `Powerwall ${this.meterType} Meter`)
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, `TeslaPowerwall-${this.meterType}-` + accessory.UUID);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.UUID);
 
     // Get the LightSensor service if it exists, otherwise create a new one
     // We use LightSensor because it has a numeric value (lux) that we can use for watts

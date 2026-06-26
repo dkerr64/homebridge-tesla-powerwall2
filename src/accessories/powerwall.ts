@@ -25,7 +25,7 @@ export class PowerwallAccessory {
     this.informationService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Tesla')
       .setCharacteristic(this.platform.Characteristic.Model, 'Powerwall')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'TeslaPowerwall-' + accessory.UUID);
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.UUID);
 
     // Get the BatteryService service if it exists, otherwise create a new one
     this.service = this.accessory.getService(this.platform.Service.Battery) ||
