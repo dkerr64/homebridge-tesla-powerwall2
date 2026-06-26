@@ -7,3 +7,8 @@ export const PLATFORM_NAME = 'TeslaPowerwall';
  * This must match the name of your plugin as defined the package.json `name` property
  */
 export const PLUGIN_NAME = 'homebridge-tesla-powerwall2';
+
+/**
+ * Default polling interval in seconds for fetching data from the Tesla Powerwall API. This can be overridden in the Homebridge config.json.
+ */
+export const DEFAULT_POLLING_INTERVAL = 15;

@@ -1,5 +1,6 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 import type { TeslaPowerwallPlatform } from '../platform.js';
+import { DEFAULT_POLLING_INTERVAL } from '../settings.js';
 
 /**
  * Platform Accessory for Tesla Powerwall Grid Power Flow Sensors
@@ -123,13 +124,13 @@ export class GridPowerSensorAccessory {
   /**
    * Start polling for updates and push them to HomeKit
    * 
-   * Polls the Powerwall API at the configured interval (default 15 seconds)
+   * Polls the Powerwall API at the configured interval
    * and updates the HomeKit characteristic when the sensor state changes.
    * 
    * Stores the interval ID to allow proper cleanup when accessory is removed.
    */
   private startPolling(): void {
-    const pollingInterval = (this.platform.config.pollingInterval || 15) * 1000;
+    const pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
 
     this.pollingIntervalId = setInterval(async () => {
       try {

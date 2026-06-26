@@ -1,5 +1,6 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 import type { TeslaPowerwallPlatform } from '../platform.js';
+import { DEFAULT_POLLING_INTERVAL } from '../settings.js';
 
 /**
  * Platform Accessory for Tesla Powerwall Grid Status
@@ -72,7 +73,7 @@ export class GridStatusAccessory {
    * Start polling for updates and push them to HomeKit
    */
   private startPolling(): void {
-    const pollingInterval = (this.platform.config.pollingInterval || 15) * 1000;
+    const pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
 
     this.pollingIntervalId = setInterval(async () => {
       try {
