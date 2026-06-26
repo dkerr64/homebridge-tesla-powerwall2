@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.6] - 2026-06-26
+
+- Optimize HomeKit GetCharacteristic handlers so no 'await' for network http requests to complete
+- Wrap http get requests in a semaphore when data is being cached...to avoid multiple requests while cache being established
+- Update eslint switch/case indenting to match VSCode's formatter indentation
+- Update variable names to be more logical (importing/exporting rather than pulling/feeding, etc)
+- Remove 'TeslaPowerwall-xxxx' prefix from accessory serial numbers
+
 ## [4.2.5] - 2026-06-24
 
 - Update package.json and subsequent required changes in source for "module" type

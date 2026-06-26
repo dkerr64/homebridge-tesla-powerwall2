@@ -3,7 +3,7 @@
   "displayName": "Tesla Powerwall 2",
   "type": "module",
   "platform": "TeslaPowerwall",
-  "version": "4.2.5",
+  "version": "4.2.6",
   "description": "Homebridge plugin for Tesla Powerwall 2",
   "main": "dist/index.js",
   "scripts": {
