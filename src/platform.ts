@@ -221,7 +221,7 @@ export class TeslaPowerwallPlatform implements TeslaPowerwallPlatformInterface {
     const meterTypes = [
       { type: 'powermeter-solar', name: 'Tesla Powerwall Solar' },
       { type: 'powermeter-grid', name: 'Tesla Powerwall Grid' },
-      { type: 'powermeter-load', name: 'Tesla Powerwall Home' },
+      { type: 'powermeter-home', name: 'Tesla Powerwall Home' },
       { type: 'powermeter-battery', name: 'Tesla Powerwall Battery' },
     ];
 

@@ -1,6 +1,6 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 import type { TeslaPowerwallPlatform } from '../platform.js';
-import { DEFAULT_POLLING_INTERVAL } from '../settings.js';
+import { DEFAULT_POLLING_INTERVAL, HTTP_CACHE_MS } from '../settings.js';
 
 /**
  * Platform Accessory for Tesla Powerwall Battery
@@ -12,15 +12,19 @@ export class PowerwallAccessory {
   private informationService: Service;
 
   // Current states
-  private batteryLevel = 50;
-  private chargingState = 0; // 0 = Not Charging, 1 = Charging, 2 = Not Chargeable
-  private lowBatteryStatus = 0; // 0 = Normal, 1 = Low
+  private batteryLevel: number = 50;
+  private chargingState: CharacteristicValue = 0; // 0 = Not Charging, 1 = Charging, 2 = Not Chargeable
+  private lowBatteryStatus: CharacteristicValue = 0; // 0 = Normal, 1 = Low
   private pollingIntervalId?: NodeJS.Timeout;
+  private pollingInterval: number;
+
 
   constructor(
     private readonly platform: TeslaPowerwallPlatform,
     private readonly accessory: PlatformAccessory,
   ) {
+    this.pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
+
     // Set accessory information
     this.informationService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
     this.informationService
@@ -70,72 +74,48 @@ export class PowerwallAccessory {
    * Handle requests to get the current value of the "Battery Level" characteristic
    */
   async getBatteryLevel(): Promise<CharacteristicValue> {
-    try {
-      const data = await this.platform.httpClient.getSystemStatus();
-      const reportedPercentage = data.percentage;
-      const resolvedPercentage = reportedPercentage ?? this.batteryLevel ?? 50;
-      // HomeKit BatteryLevel is an integer 0-100. Round down to match the Tesla
-      // and Apple Home apps, which always floor the reported percentage.
-      this.batteryLevel = Math.floor(resolvedPercentage);
-      this.service.updateCharacteristic(this.platform.Characteristic.BatteryLevel, this.batteryLevel);
-
-      this.platform.log.debug('Get Characteristic BatteryLevel ->', this.batteryLevel);
-      return this.batteryLevel;
-    } catch (error) {
-      this.platform.log.error('Error getting battery level:', error);
-      return this.batteryLevel;
+    if (!this.requestQueued) {
+      // update status asap but avoid queuing multiple requests
+      this.requestQueued = true;
+      setTimeout(() => {
+        this.getData();
+        this.requestQueued = false;
+      }, 50);
     }
+    this.platform.log.debug(`Get Characteristic battery level -> ${this.batteryLevel}`);
+    return this.batteryLevel;
   }
 
   /**
    * Handle requests to get the current value of the "Charging State" characteristic
    */
   async getChargingState(): Promise<CharacteristicValue> {
-    try {
-      const data = await this.platform.httpClient.getMetersAggregates();
-      const batteryPower = data.battery?.instant_power || 0;
-
-      // Tesla API convention: battery.instant_power is negative when charging,
-      // positive when discharging. 50W threshold filters out idle noise.
-      if (batteryPower < -50) {
-        this.chargingState = this.platform.Characteristic.ChargingState.CHARGING;
-      } else {
-        this.chargingState = this.platform.Characteristic.ChargingState.NOT_CHARGING;
-      }
-
-      this.platform.log.debug('Get Characteristic ChargingState ->', this.chargingState);
-      return this.chargingState;
-    } catch (error) {
-      this.platform.log.error('Error getting charging state:', error);
-      return this.chargingState;
+    if (!this.requestQueued) {
+      // update status asap but avoid queuing multiple requests
+      this.requestQueued = true;
+      setTimeout(() => {
+        this.getData();
+        this.requestQueued = false;
+      }, 50);
     }
+    this.platform.log.debug(`Get Characteristic charging state -> ${this.chargingState ? 'Charging' : 'Not Charging'}`);
+    return this.chargingState;
   }
 
   /**
    * Handle requests to get the current value of the "Status Low Battery" characteristic
    */
   async getStatusLowBattery(): Promise<CharacteristicValue> {
-    try {
-      const data = await this.platform.httpClient.getSystemStatus();
-      const reportedPercentage = data.percentage;
-      const resolvedPercentage = reportedPercentage ?? this.batteryLevel ?? 50;
-      this.batteryLevel = Math.floor(resolvedPercentage);
-      this.service.updateCharacteristic(this.platform.Characteristic.BatteryLevel, this.batteryLevel);
-
-      const lowBatteryThreshold = this.platform.config.lowBattery ?? 20;
-
-      this.lowBatteryStatus = this.batteryLevel <= lowBatteryThreshold ?
-        this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW :
-        this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
-
-      this.service.updateCharacteristic(this.platform.Characteristic.StatusLowBattery, this.lowBatteryStatus);
-
-      this.platform.log.debug('Get Characteristic StatusLowBattery ->', this.lowBatteryStatus);
-      return this.lowBatteryStatus;
-    } catch (error) {
-      this.platform.log.error('Error getting low battery status:', error);
-      return this.lowBatteryStatus;
+    if (!this.requestQueued) {
+      // update status asap but avoid queuing multiple requests
+      this.requestQueued = true;
+      setTimeout(() => {
+        this.getData();
+        this.requestQueued = false;
+      }, 50);
     }
+    this.platform.log.debug(`Get Characteristic low battery state -> ${this.lowBatteryStatus ? 'Low' : 'Normal'}`);
+    return this.lowBatteryStatus;
   }
 
   /**
@@ -164,19 +144,16 @@ export class PowerwallAccessory {
    * Returns the battery percentage (0-100%)
    */
   async getLightbulbBrightness(): Promise<CharacteristicValue> {
-    try {
-      const data = await this.platform.httpClient.getSystemStatus();
-      const reportedPercentage = data.percentage;
-      const resolvedPercentage = reportedPercentage ?? this.batteryLevel ?? 50;
-      // HomeKit Brightness is an integer 0-100. Round down to match the Apple
-      // Home app, which always floors the displayed value.
-      const brightness = Math.floor(resolvedPercentage);
-      this.platform.log.debug('Get Characteristic Brightness (Battery Level) ->', brightness);
-      return brightness;
-    } catch (error) {
-      this.platform.log.error('Error getting battery level for brightness:', error);
-      return this.batteryLevel;
+    if (!this.requestQueued) {
+      // update status asap but avoid queuing multiple requests
+      this.requestQueued = true;
+      setTimeout(() => {
+        this.getData();
+        this.requestQueued = false;
+      }, 50);
     }
+    this.platform.log.debug(`Get Characteristic brightness (battery level) -> ${this.batteryLevel}`);
+    return this.batteryLevel;
   }
 
   /**
@@ -187,7 +164,7 @@ export class PowerwallAccessory {
     // Calling updateCharacteristic within set handler fails, new value is not accepted.  Workaround is to request
     // the update after short delay (say 50ms).
     if (value !== this.batteryLevel) {
-      this.platform.log.debug('Ignoring user request to change Powerwall "brightness".');
+      this.platform.log.debug('Ignoring user request to change Powerwall brightness.');
       setTimeout(() => {
         this.lightbulbService.updateCharacteristic(this.platform.Characteristic.Brightness, this.batteryLevel);
         this.lightbulbService.updateCharacteristic(this.platform.Characteristic.On, true);
@@ -195,35 +172,68 @@ export class PowerwallAccessory {
     }
   }
 
+  private requestQueued: boolean = false;
+  private lastHttpTimestamp: number = 0;
+  private lastBatteryLevel: number = 0;
+  private lastLowBatteryStatus: CharacteristicValue = -1; // negative (invalid) value to force log on first update
+  private lastChargingState: CharacteristicValue = -1; // negative (invalid) value to force log on first update
+  private getData = async (): Promise<void> => {
+    try {
+      const elapsed = Date.now() - this.lastHttpTimestamp;
+      if (elapsed < this.pollingInterval) {
+        this.platform.log.debug(`Fetching Powerwall status from API... Last update: ${elapsed}ms ago`);
+      }
+      this.lastHttpTimestamp = Date.now();
+
+      const systemData = await this.platform.httpClient.getSystemStatus(HTTP_CACHE_MS);
+      const resolvedPercentage = systemData.percentage ?? this.batteryLevel ?? 50;
+      // HomeKit BatteryLevel is an integer 0-100. Round down to match the Tesla
+      // and Apple Home apps, which always floor the reported percentage.
+      this.batteryLevel = Math.floor(resolvedPercentage);
+      this.service.updateCharacteristic(this.platform.Characteristic.BatteryLevel, this.batteryLevel);
+      this.lightbulbService.updateCharacteristic(this.platform.Characteristic.Brightness, this.batteryLevel);
+      this.lightbulbService.updateCharacteristic(this.platform.Characteristic.On, true);
+
+      if (this.batteryLevel !== this.lastBatteryLevel) {
+        this.lastBatteryLevel = this.batteryLevel;
+        this.platform.log.info(`Powerwall battery level changed to: ${this.batteryLevel}`);
+      }
+
+      const lowBatteryThreshold = this.platform.config.lowBattery ?? 20;
+      this.lowBatteryStatus = this.batteryLevel <= lowBatteryThreshold ?
+        this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_LOW :
+        this.platform.Characteristic.StatusLowBattery.BATTERY_LEVEL_NORMAL;
+      this.service.updateCharacteristic(this.platform.Characteristic.StatusLowBattery, this.lowBatteryStatus);
+
+      if (this.lowBatteryStatus !== this.lastLowBatteryStatus) {
+        this.lastLowBatteryStatus = this.lowBatteryStatus;
+        this.platform.log.info(`Powerwall low battery status changed to: ${this.lowBatteryStatus ? 'Low' : 'Normal'}`);
+      }
+
+      const metersData = await this.platform.httpClient.getMetersAggregates(HTTP_CACHE_MS);
+      const batteryPower = metersData.battery?.instant_power || 0;
+      // Tesla API convention: battery.instant_power is negative when charging,
+      // positive when discharging. 50W threshold filters out idle noise.
+      this.chargingState = batteryPower < -50 ?
+        this.platform.Characteristic.ChargingState.CHARGING :
+        this.platform.Characteristic.ChargingState.NOT_CHARGING;
+      this.service.updateCharacteristic(this.platform.Characteristic.ChargingState, this.chargingState);
+
+      if (this.chargingState !== this.lastChargingState) {
+        this.lastChargingState = this.chargingState;
+        this.platform.log.info(`Powerwall charging state changed to: ${this.chargingState ? 'Charging' : 'Not Charging'}`);
+      }
+    } catch (error) {
+      this.platform.log.error('Error getting Powerwall status:', error);
+    }
+  };
+
   /**
    * Start polling for updates and push them to HomeKit
    */
   private startPolling(): void {
-    const pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
-
-    this.pollingIntervalId = setInterval(async () => {
-      try {
-        // Update battery level
-        const batteryLevel = await this.getBatteryLevel();
-        this.service.updateCharacteristic(this.platform.Characteristic.BatteryLevel, batteryLevel);
-
-        // Update charging state
-        const chargingState = await this.getChargingState();
-        this.service.updateCharacteristic(this.platform.Characteristic.ChargingState, chargingState);
-
-        // Update low battery status
-        const lowBatteryStatus = await this.getStatusLowBattery();
-        this.service.updateCharacteristic(this.platform.Characteristic.StatusLowBattery, lowBatteryStatus);
-
-        // Update lightbulb brightness to match battery level
-        this.lightbulbService.updateCharacteristic(this.platform.Characteristic.Brightness, batteryLevel);
-        // Lightbulb is always on
-        this.lightbulbService.updateCharacteristic(this.platform.Characteristic.On, true);
-
-      } catch (error) {
-        this.platform.log.error('Error during polling update:', error);
-      }
-    }, pollingInterval);
+    this.getData();
+    this.pollingIntervalId = setInterval(this.getData, this.pollingInterval);
   }
 
   /**

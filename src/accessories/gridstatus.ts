@@ -1,6 +1,6 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 import type { TeslaPowerwallPlatform } from '../platform.js';
-import { DEFAULT_POLLING_INTERVAL } from '../settings.js';
+import { DEFAULT_POLLING_INTERVAL, HTTP_CACHE_MS } from '../settings.js';
 
 /**
  * Platform Accessory for Tesla Powerwall Grid Status
@@ -11,13 +11,16 @@ export class GridStatusAccessory {
   private informationService: Service;
 
   // Current state (0 = grid connected, 1 = grid disconnected)
-  private gridStatus = 0;
+  private gridStatus: CharacteristicValue = 0;
   private pollingIntervalId?: NodeJS.Timeout;
+  private pollingInterval: number;
 
   constructor(
     private readonly platform: TeslaPowerwallPlatform,
     private readonly accessory: PlatformAccessory,
   ) {
+    this.pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
+
     // Set accessory information
     this.informationService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
     this.informationService
@@ -46,43 +49,45 @@ export class GridStatusAccessory {
    * Returns CONTACT_NOT_DETECTED (1) when grid is disconnected
    */
   async getGridStatus(): Promise<CharacteristicValue> {
+    setTimeout(() => this.getData(), 50); // update status asap
+    this.platform.log.debug(`Get Characteristic grid status -> ${this.gridStatus ? 'Disconnected' : 'Connected'}`);
+    return this.gridStatus;
+  }
+
+  private lastHttpTimestamp: number = 0;
+  private lastGridStatus: CharacteristicValue = -1; // negative (invalid) value to force log on first update
+  private getData = async (): Promise<void> => {
     try {
-      const data = await this.platform.httpClient.getGridStatus();
-      
+      const elapsed = Date.now() - this.lastHttpTimestamp;
+      if (elapsed < this.pollingInterval) {
+        this.platform.log.debug(`Fetching grid status from Powerwall API... Last update: ${elapsed}ms ago`);
+      }
+      this.lastHttpTimestamp = Date.now();
+
+      const data = await this.platform.httpClient.getGridStatus(HTTP_CACHE_MS);
       // Map grid status to contact sensor state
       // "SystemGridConnected" = grid connected
       // "SystemIslandedActive" = grid disconnected (islanded)
-      const isGridConnected = data.grid_status === 'SystemGridConnected';
-      
-      this.gridStatus = isGridConnected ? 
+      this.gridStatus = (data.grid_status === 'SystemGridConnected') ?
         this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED :
         this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED;
-      
-      this.platform.log.debug('Get Characteristic GridStatus ->', 
-        isGridConnected ? 'Connected' : 'Disconnected', 
-        '(', this.gridStatus, ')');
-      
-      return this.gridStatus;
+      this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, this.gridStatus);
+
+      if (this.gridStatus !== this.lastGridStatus) {
+        this.lastGridStatus = this.gridStatus;
+        this.platform.log.info(`Grid status changed to: ${this.gridStatus ? 'Disconnected' : 'Connected'}`);
+      }
     } catch (error) {
       this.platform.log.error('Error getting grid status:', error);
-      return this.gridStatus;
     }
-  }
+  };
 
   /**
    * Start polling for updates and push them to HomeKit
    */
-  private startPolling(): void {
-    const pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
-
-    this.pollingIntervalId = setInterval(async () => {
-      try {
-        const gridStatus = await this.getGridStatus();
-        this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, gridStatus);
-      } catch (error) {
-        this.platform.log.error('Error during grid status polling update:', error);
-      }
-    }, pollingInterval);
+  private async startPolling(): Promise<void> {
+    this.getData();
+    this.pollingIntervalId = setInterval(this.getData, this.pollingInterval);
   }
 
   /**

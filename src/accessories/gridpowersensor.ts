@@ -1,6 +1,6 @@
 import type { CharacteristicValue, PlatformAccessory, Service } from 'homebridge';
 import type { TeslaPowerwallPlatform } from '../platform.js';
-import { DEFAULT_POLLING_INTERVAL } from '../settings.js';
+import { DEFAULT_POLLING_INTERVAL, HTTP_CACHE_MS } from '../settings.js';
 
 /**
  * Platform Accessory for Tesla Powerwall Grid Power Flow Sensors
@@ -19,12 +19,13 @@ import { DEFAULT_POLLING_INTERVAL } from '../settings.js';
 export class GridPowerSensorAccessory {
   private service: Service;
   private informationService: Service;
-  
+
   // Current sensor state (0 = normal, 1 = detected)
-  private sensorState = 0;
+  private sensorState: CharacteristicValue = 0;
   private sensorType: 'exporting' | 'importing';
   private pollingIntervalId?: NodeJS.Timeout;
-  
+  private pollingInterval: number;
+
   /**
    * Constructor for GridPowerSensorAccessory
    * 
@@ -37,18 +38,19 @@ export class GridPowerSensorAccessory {
   ) {
     // Determine sensor type from device context
     this.sensorType = accessory.context.device.sensorType;
-    
+    this.pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
+
     // Validate sensor type
     if (!this.sensorType || (this.sensorType !== 'exporting' && this.sensorType !== 'importing')) {
       this.platform.log.error(`Invalid or missing sensor type for ${accessory.displayName}. Expected 'exporting' or 'importing', got: ${this.sensorType}`);
       this.sensorType = 'exporting'; // Fallback to prevent crash
     }
-    
+
     // Set accessory information
     this.informationService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
     this.informationService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Tesla')
-      .setCharacteristic(this.platform.Characteristic.Model, `Powerwall ${this.sensorType === 'exporting' ? 'Exporting' : 'Importing'} Sensor`)
+      .setCharacteristic(this.platform.Characteristic.Model, `Powerwall ${this.sensorType} sensor`)
       .setCharacteristic(this.platform.Characteristic.SerialNumber, accessory.UUID);
 
     // Get or create the ContactSensor service
@@ -81,24 +83,27 @@ export class GridPowerSensorAccessory {
    * @returns {Promise<CharacteristicValue>} The current sensor state
    */
   async getSensorState(): Promise<CharacteristicValue> {
+    setTimeout(() => this.getData(), 50); // update status asap
+    this.platform.log.debug(`Get Characteristic ${this.sensorType} sensor state -> ${this.sensorState ? 'Active' : 'Idle'}`);
+    return this.sensorState;
+  }
+
+  private lastHttpTimestamp: number = 0;
+  private lastStatus: CharacteristicValue = -1; // negative (invalid) value to force log on first update
+  private getData = async (): Promise<void> => {
     try {
-      const data = await this.platform.httpClient.getMetersAggregates();
-      const sitePower = data.site?.instant_power || 0;
-      
+      const elapsed = Date.now() - this.lastHttpTimestamp;
+      if (elapsed < this.pollingInterval) {
+        this.platform.log.debug(`Fetching ${this.sensorType} status from Powerwall API... Last update: ${elapsed}ms ago`);
+      }
+      this.lastHttpTimestamp = Date.now();
+
+      const data = await this.platform.httpClient.getMetersAggregates(HTTP_CACHE_MS);
+      const gridPower = data.site?.instant_power || 0;
       // Get threshold from config, default to 50W to avoid noise
       // Use nullish coalescing to allow 0 as a valid threshold value
       const threshold = this.platform.config.gridSensorThreshold ?? 50;
-      
-      let isConditionMet = false;
-      
-      if (this.sensorType === 'exporting') {
-        // Exporting to grid: site power is negative and magnitude exceeds threshold
-        isConditionMet = sitePower < -threshold;
-      } else {
-        // Importing from grid: site power is positive and exceeds threshold
-        isConditionMet = sitePower > threshold;
-      }
-      
+      const isConditionMet = (this.sensorType === 'exporting') ? gridPower < -threshold : gridPower > threshold;
       // Idle (no flow) is the quiescent state and maps to Closed, matching
       // HomeKit door-sensor convention where Open is the noteworthy event.
       // Active export/import triggers Open so it reads naturally in
@@ -106,20 +111,17 @@ export class GridPowerSensorAccessory {
       this.sensorState = isConditionMet ?
         this.platform.Characteristic.ContactSensorState.CONTACT_NOT_DETECTED :
         this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+      this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, this.sensorState);
 
-      this.platform.log.debug(
-        `Get Characteristic ${this.sensorType === 'exporting' ? 'Exporting' : 'Importing'} Sensor ->`,
-        `${sitePower.toFixed(1)}W`,
-        isConditionMet ? 'ACTIVE (Open)' : 'IDLE (Closed)',
-        `(threshold: ${threshold}W)`,
-      );
-      
-      return this.sensorState;
+      if (this.sensorState !== this.lastStatus) {
+        this.lastStatus = this.sensorState;
+        this.platform.log.info(`Grid ${this.sensorType} sensor status changed to: ${this.sensorState ? 'Active' : 'Idle'} (${gridPower.toFixed(1)}W)`);
+      }
+
     } catch (error) {
-      this.platform.log.error(`Error getting grid ${this.sensorType} sensor state:`, error);
-      return this.sensorState;
+      this.platform.log.error(`Error during grid ${this.sensorType} sensor polling update:`, error);
     }
-  }
+  };
 
   /**
    * Start polling for updates and push them to HomeKit
@@ -129,17 +131,9 @@ export class GridPowerSensorAccessory {
    * 
    * Stores the interval ID to allow proper cleanup when accessory is removed.
    */
-  private startPolling(): void {
-    const pollingInterval = (this.platform.config.pollingInterval || DEFAULT_POLLING_INTERVAL) * 1000;
-
-    this.pollingIntervalId = setInterval(async () => {
-      try {
-        const sensorState = await this.getSensorState();
-        this.service.updateCharacteristic(this.platform.Characteristic.ContactSensorState, sensorState);
-      } catch (error) {
-        this.platform.log.error(`Error during grid ${this.sensorType} sensor polling update:`, error);
-      }
-    }, pollingInterval);
+  private async startPolling(): Promise<void> {
+    this.getData();
+    this.pollingIntervalId = setInterval(this.getData, this.pollingInterval);
   }
 
   /**
