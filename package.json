@@ -36,12 +36,12 @@
   },
   "homepage": "https://github.com/dkerr64/homebridge-tesla-powerwall2#readme",
   "engines": {
-    "node": "^20.18.0 || ^22.10.0 || ^24.0.0",
+    "node": "^20.18.0 || ^22.10.0 || ^24.0.0 || ^26.0.0",
     "homebridge": "^1.8.0 || ^2.0.0"
   },
   "dependencies": {
-    "undici": "^8.4.1",
-    "semaphore-promise": "^1.4.4"
+    "semaphore-promise": "^1.4.4",
+    "undici": "^8.4.1"
   },
   "overrides": {
     "diff": "^9.0.0",
