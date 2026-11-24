@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [4.2.8] - 2026-11-24
+
+- Bugfix: Ensure importing and exporting cannot both be set. fixes https://github.com/dkerr64/homebridge-tesla-powerwall2/issues/1
+- Other: Update package versions for issues identified by dependabot
+
 ## [4.2.7] - 2026-07-25
 
 - Update package versions for issues identified by dependabot
