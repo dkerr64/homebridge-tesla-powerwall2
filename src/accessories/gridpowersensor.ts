@@ -26,6 +26,9 @@ export class GridPowerSensorAccessory {
   private pollingIntervalId?: NodeJS.Timeout;
   private pollingInterval: number;
 
+  // Static map to track sensor instances for coordination
+  private static sensorInstances = new Map<string, GridPowerSensorAccessory>();
+
   /**
    * Constructor for GridPowerSensorAccessory
    * 
@@ -45,6 +48,9 @@ export class GridPowerSensorAccessory {
       this.platform.log.error(`Invalid or missing sensor type for ${accessory.displayName}. Expected 'exporting' or 'importing', got: ${this.sensorType}`);
       this.sensorType = 'exporting'; // Fallback to prevent crash
     }
+
+    // Register this instance for coordination with the other sensor
+    GridPowerSensorAccessory.sensorInstances.set(this.sensorType, this);
 
     // Set accessory information
     this.informationService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
@@ -104,6 +110,12 @@ export class GridPowerSensorAccessory {
       // Use nullish coalescing to allow 0 as a valid threshold value
       const threshold = this.platform.config.gridSensorThreshold ?? 50;
       const isConditionMet = (this.sensorType === 'exporting') ? gridPower < -threshold : gridPower > threshold;
+
+      // Ensure mutual exclusivity: if this sensor is active, deactivate the other
+      if (isConditionMet) {
+        this.deactivateOtherSensor();
+      }
+
       // Idle (no flow) is the quiescent state and maps to Closed, matching
       // HomeKit door-sensor convention where Open is the noteworthy event.
       // Active export/import triggers Open so it reads naturally in
@@ -122,6 +134,23 @@ export class GridPowerSensorAccessory {
       this.platform.log.error(`Error during grid ${this.sensorType} sensor polling update:`, error);
     }
   };
+
+  /**
+   * Deactivate the opposite sensor to ensure only one can be active at a time
+   */
+  private deactivateOtherSensor(): void {
+    const otherSensorType = this.sensorType === 'exporting' ? 'importing' : 'exporting';
+    const otherSensor = GridPowerSensorAccessory.sensorInstances.get(otherSensorType);
+
+    if (otherSensor && otherSensor.sensorState !== this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED) {
+      otherSensor.sensorState = this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED;
+      otherSensor.service.updateCharacteristic(
+        this.platform.Characteristic.ContactSensorState,
+        this.platform.Characteristic.ContactSensorState.CONTACT_DETECTED,
+      );
+      this.platform.log.debug(`Grid ${otherSensorType} sensor forced to Closed due to ${this.sensorType} sensor activation`);
+    }
+  }
 
   /**
    * Start polling for updates and push them to HomeKit
@@ -147,5 +176,6 @@ export class GridPowerSensorAccessory {
       clearInterval(this.pollingIntervalId);
       this.pollingIntervalId = undefined;
     }
+    GridPowerSensorAccessory.sensorInstances.delete(this.sensorType);
   }
 }
